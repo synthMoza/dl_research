@@ -34,9 +34,13 @@ class GeneticOptimizer
     }
 
     void dump_population(const Population& population) const {
+        #ifdef NDEBUG
         std::cout << "Population dump:" << std::endl;
         for (const auto& offspring : population)
             std::cout << "\t" << "genome:" << offspring.genome.getEncodedGenome() << "; fit: " << offspring.fit << std::endl;
+        #else
+        (void) population;
+        #endif
     }
 
 public:

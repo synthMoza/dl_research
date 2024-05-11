@@ -6,7 +6,7 @@ namespace po = boost::program_options;
 using namespace dl;
 
 double target_function(double x) {
-    return sin(x*x) * x * x + 1 / x;
+    return x*x-3*x+4;
 }
 
 po::variables_map parse_arguments(int argc, char* argv[]) {
@@ -14,6 +14,7 @@ po::variables_map parse_arguments(int argc, char* argv[]) {
     desc.add_options()
         ("population_size", po::value<size_t>()->required(), "set population size")
         ("max_generations", po::value<size_t>()->required(), "set maximum amount of generations")
+        ("mutation_probability", po::value<double>()->required(), "set probability of mutation in each genome")
         ("start", po::value<double>()->required(), "set search interval start")
         ("end", po::value<double>()->required(), "set search interval end")
     ;
@@ -37,9 +38,10 @@ int main(int argc, char* argv[])
         dl::GeneticOptimizer optimizer(population_size, max_generations);
         optimizer.register_pass(std::unique_ptr<PopulationPass>(new SelectionPass()));
         optimizer.register_pass(std::unique_ptr<PopulationPass>(new CrossoverPass()));
-        optimizer.register_pass(std::unique_ptr<PopulationPass>(new MutationPass(0.1)));
+        optimizer.register_pass(std::unique_ptr<PopulationPass>(new MutationPass(vm["mutation_probability"].as<double>())));
 
-        const auto& fitness_function = [](double x) {double y = target_function(x); return -y / (1 + exp(y));};
+        //const auto& fitness_function = [](double x) {double y = target_function(x); return -y / (1 + exp(y));};
+        const auto& fitness_function = [](double x) {double y = target_function(x); return 100 * exp(-y);};
         // tranformer should map integer decoded genome value to double value
         const auto& tranformer = [a, b](Genome::GenomeType g) {
             double v = static_cast<double>(g) / static_cast<double>(Genome::getDistributionMaximumValue() - Genome::getDistributionMinimumValue()) * (b - a) + a;
@@ -54,6 +56,6 @@ int main(int argc, char* argv[])
     catch (const std::exception& e) {
         std::cout << "Failed to parse arguments: " << e.what() << std::endl;
     }
-    
+
     return 0;
 }
