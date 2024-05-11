@@ -12,7 +12,7 @@ enable_testing()
 
 set(SOURCES gray_code.cpp)
 add_executable(${PROJECT_NAME} ${SOURCES})
-target_link_libraries(${PROJECT_NAME} genetic_algo_minimizer GTest::gtest_main)
+target_link_libraries(${PROJECT_NAME} genetic_minimizer GTest::gtest_main)
 
 include(GoogleTest)
 gtest_discover_tests(${PROJECT_NAME})

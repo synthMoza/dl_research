@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(genetic_algo_minimizer)
+project(genetic_algo_minimizer CXX)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
@@ -16,9 +16,19 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 set(SOURCE_DIR src)
 set(INCLUDE_DIR include)
 set(SOURCES ${SOURCE_DIR}/main.cpp)
-set(INCLUDES ${INCLUDE_DIR}/gray_code.h)
+set(INCLUDES 
+    ${INCLUDE_DIR}/gray_code.h
+    ${INCLUDE_DIR}/genetic_optimizer.h
+    ${INCLUDE_DIR}/genome.h
+    ${INCLUDE_DIR}/offspring.h
+)
 
-add_library(${PROJECT_NAME} ${SOURCES} ${INCLUDES})
-target_include_directories(${PROJECT_NAME} PUBLIC ${INCLUDE_DIR})
+add_library(genetic_minimizer ${INCLUDES})
+target_include_directories(genetic_minimizer PUBLIC ${INCLUDE_DIR})
+set_target_properties(genetic_minimizer PROPERTIES LINKER_LANGUAGE CXX)
+
+add_executable(demoapp ${SOURCES})
+target_link_libraries(demoapp PUBLIC genetic_minimizer)
+set_target_properties(demoapp PROPERTIES LINKER_LANGUAGE CXX)
 
 add_subdirectory(test)
