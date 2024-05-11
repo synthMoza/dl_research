@@ -34,7 +34,10 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/demoapp",
             "args": [
-
+                "--population_size=100",
+                "--max_generations=100",
+                "--start=0",
+                "--end=1000",
             ],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",

@@ -1,13 +1,15 @@
 #ifndef OFFSPRING_HEADER
 #define OFFSPRING_HEADER
 
+#include <functional>
+
 #include "genome.h"
 
 namespace dl
 {
 
-using GenomeTranformer = double(*)(Genome::GenomeType);
-using FitnessFunction = double (*)(double);
+using GenomeTranformer = std::function<double(Genome::GenomeType)>;
+using FitnessFunction = std::function<double(double)>;
 
 struct Offspring
 {

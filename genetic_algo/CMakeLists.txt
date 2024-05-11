@@ -13,6 +13,8 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
+find_package(Boost 1.40 COMPONENTS program_options REQUIRED)
+
 set(SOURCE_DIR src)
 set(INCLUDE_DIR include)
 set(SOURCES ${SOURCE_DIR}/main.cpp)
@@ -28,7 +30,8 @@ target_include_directories(genetic_minimizer PUBLIC ${INCLUDE_DIR})
 set_target_properties(genetic_minimizer PROPERTIES LINKER_LANGUAGE CXX)
 
 add_executable(demoapp ${SOURCES})
-target_link_libraries(demoapp PUBLIC genetic_minimizer)
+target_link_libraries(demoapp PUBLIC genetic_minimizer ${Boost_LIBRARIES})
+target_include_directories(demoapp PUBLIC ${Boost_INCLUDE_DIR})
 set_target_properties(demoapp PROPERTIES LINKER_LANGUAGE CXX)
 
 add_subdirectory(test)
