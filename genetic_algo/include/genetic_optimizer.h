@@ -24,9 +24,12 @@ class GeneticOptimizer
     size_t m_max_generations;
 
     // utility
-    void update_fits(Population& population, FitnessFunction fitness_function, GenomeTranformer transformer) {
-        std::for_each(population.begin(), population.end(), [&](Offspring& o){o.update_fit(fitness_function, transformer);});
-    }
+    // void update_fits(Population& population, FitnessFunction fitness_function, GenomeTranformer transformer) {
+    //     #pragma omp for
+    //     for (size_t i = 0; i < population.size(); ++i) {
+    //         population[i].update_fit(fitness_function, transformer);
+    //     }
+    // }
 
     void update_population(Population& population, size_t generation) {
         for (const auto& pass : m_passes)
@@ -59,24 +62,36 @@ public:
 
         // initial population
         Population population(m_population_size);
-        update_fits(population, fitness_function, transformer);
+        for (size_t i = 0; i < population.size(); ++i) {
+            population[i].update_fit(fitness_function, transformer);
+        }
         dump_population(population);
 
         while (true)
         {
+            #ifdef NDEBUG
             std::cout << "Generation #" << generation << std::endl;
+            #endif
+
             update_population(population, generation);
-            update_fits(population, fitness_function, transformer);
+            #pragma omp parallel for schedule(static)
+            for (size_t i = 0; i < population.size(); ++i) {
+                population[i].update_fit(fitness_function, transformer);
+            }
             dump_population(population);
 
             // Stopping criteria will be low fitness function difference between generations
             std::sort(population.rbegin(), population.rend());
-            double current_best_result = population.begin()->fit;
 
+            #ifdef NDEBUG
+            double current_best_result = population.begin()->fit;
             std::cout << "Current generation best fit value: " << current_best_result << std::endl;
-            
+            #endif
+
             if (generation >= m_max_generations) {
+                #ifdef NDEBUG
                 std::cout << "Generation limit exceeded!" << std::endl;
+                #endif
                 break;
             }
 

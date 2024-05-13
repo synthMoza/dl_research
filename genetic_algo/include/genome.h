@@ -15,8 +15,6 @@ class Genome
 public:
     using GenomeType = uint64_t;
 private:
-    const static size_t m_genome_size = sizeof(GenomeType) * 8;
-
     GrayEncoder<GenomeType, GenomeType> m_encoder{};
     GenomeType m_encoded_value;
 
@@ -46,14 +44,14 @@ public:
     }
 
     static size_t getGenomeSize() {
-        return m_genome_size;
+        return sizeof(GenomeType) * 8;
     }
 
     void mutate(double mutation_probability) {
         std::uniform_real_distribution distribution;
-        std::bitset<m_genome_size> bits(m_encoded_value);
+        std::bitset<sizeof(GenomeType) * 8> bits(m_encoded_value);
 
-        for (size_t i = 0; i < m_genome_size; ++i) {
+        for (size_t i = 0; i < sizeof(GenomeType) * 8; ++i) {
             const auto current_probability = distribution(random_engine);
             if (current_probability < mutation_probability) {
                 bits.flip(i);

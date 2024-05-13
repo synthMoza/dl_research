@@ -1,6 +1,7 @@
 #include <vector>
 #include <unordered_map>
 #include <stdexcept>
+#include <tuple>
 
 #include "offspring.h"
 
@@ -112,8 +113,8 @@ class CrossoverPass : public PopulationPass {
         const GenomeType mask1 = (static_cast<GenomeType>(-1) >> point_idx) << point_idx;
         const GenomeType mask2 = static_cast<GenomeType>(-1) ^ mask1;
         const GenomeType child_genome = (lhs_genome & mask1) ^ (rhs_genome & mask2); 
-            
-        return Offspring{.genome = child_genome, .fit = 0, .generation = generation}; // we update fit later
+        
+        return Offspring{child_genome, generation}; // we update fit later
     }
 public:
     CrossoverPass(CrossoverStrategy crossover_strategy = ONE_POINT_CROSSOVER, size_t birth_rate = 2) :
@@ -159,5 +160,58 @@ public:
         }
     }
 };
+
+class ParticleSwarmOptimizationPass : public PopulationPass {
+    double m_c1, m_c2;
+public:
+    ParticleSwarmOptimizationPass(double c1, double c2) :
+        m_c1(c1), m_c2(c2) {}
+
+    void run(Population& population, size_t generation) const override {
+        (void) generation;
+
+        Genome best_popoulation_genome;
+        double best_population_fit = 0;
+        for (size_t i = 0; i < population.size(); ++i) {
+            if (population[i].best_fit > best_population_fit) {
+                best_population_fit = population[i].best_fit;
+                best_popoulation_genome = population[i].best_genome;
+            }
+        }
+
+        for (auto& offspring : population) {
+            offspring.update_velocity(m_c1, m_c2, best_popoulation_genome);
+        }
+    }
+};
+
+// class AdaptiveMutationPass : public PopulationPass {
+//     std::tuple<double, double> m_base_probabilities;
+// public:
+//     AdaptiveMutationPass(double k1, double k2) :
+//         m_base_probabilities(std::make_tuple(k1, k2)) {}
+
+//     void run(Population& population, size_t generation) const override {
+//         std::vector<double> fits(population.size());
+//         for (size_t i = 0; i < fits.size(); ++i)
+//             fits[i] = population[i].fit;
+
+//         double max_fit = *std::max_element(fits.begin(), fits.end());
+//         double average_fit = std::reduce(fits.begin(), fits.end()) / population.size();
+//         for (auto it = population.begin(); it != population.end(); ++it) {
+//             if (it->generation == generation) {
+//                 double mutation_probability = 0;
+//                 if (it->fit >= average_fit)
+//                     mutation_probability = std::get<0>(m_base_probabilities) * (max_fit - it->fit) / (max_fit - average_fit);
+//                 else
+//                     mutation_probability = std::get<1>(m_base_probabilities);
+//                 #ifdef NDEBUG
+//                 std::cout << "Adaptive mutation probability: " << mutation_probability << std::endl;
+//                 #endif
+//                 it->genome.mutate(mutation_probability);
+//             }
+//         }
+//     }
+// };
 
 } // namespace dl

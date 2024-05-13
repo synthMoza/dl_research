@@ -14,6 +14,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 find_package(Boost 1.40 COMPONENTS program_options REQUIRED)
+find_package(OpenMP REQUIRED)
 
 set(SOURCE_DIR src)
 set(INCLUDE_DIR include)
@@ -27,11 +28,16 @@ set(INCLUDES
 
 add_library(genetic_minimizer ${INCLUDES})
 target_include_directories(genetic_minimizer PUBLIC ${INCLUDE_DIR})
+target_link_libraries(genetic_minimizer PUBLIC OpenMP::OpenMP_CXX)
 set_target_properties(genetic_minimizer PROPERTIES LINKER_LANGUAGE CXX)
 
 add_executable(demoapp ${SOURCES})
 target_link_libraries(demoapp PUBLIC genetic_minimizer ${Boost_LIBRARIES})
 target_include_directories(demoapp PUBLIC ${Boost_INCLUDE_DIR})
 set_target_properties(demoapp PROPERTIES LINKER_LANGUAGE CXX)
+
+if (CMAKE_BUILD_TYPE STREQUAL Debug)
+    target_compile_definitions(demoapp PUBLIC NDEBUG)
+endif()
 
 add_subdirectory(test)
