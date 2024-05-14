@@ -6,6 +6,7 @@
 #include <iostream>
 #include <array>
 #include <memory>
+#include <chrono>
 
 #include "rng.h"
 #include "pass.h"
@@ -32,8 +33,9 @@ class GeneticOptimizer
     // }
 
     void update_population(Population& population, size_t generation) {
-        for (const auto& pass : m_passes)
-            pass->run(population, generation);
+        for (size_t i = 0; i < m_passes.size(); ++i) {
+            m_passes[i]->run(population, generation);
+        }
     }
 
     void dump_population(const Population& population) const {
@@ -62,6 +64,7 @@ public:
 
         // initial population
         Population population(m_population_size);
+        #pragma omp parallel for
         for (size_t i = 0; i < population.size(); ++i) {
             population[i].update_fit(fitness_function, transformer);
         }
@@ -74,13 +77,12 @@ public:
             #endif
 
             update_population(population, generation);
-            #pragma omp parallel for schedule(static)
+            #pragma omp parallel for
             for (size_t i = 0; i < population.size(); ++i) {
                 population[i].update_fit(fitness_function, transformer);
             }
             dump_population(population);
 
-            // Stopping criteria will be low fitness function difference between generations
             std::sort(population.rbegin(), population.rend());
 
             #ifdef NDEBUG

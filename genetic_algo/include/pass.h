@@ -2,6 +2,7 @@
 #include <unordered_map>
 #include <stdexcept>
 #include <tuple>
+#include <set>
 
 #include "offspring.h"
 
@@ -40,7 +41,7 @@ class SelectionPass : public PopulationPass {
         probabilities.reserve(population_size);
         for (auto it = begin; it != end; ++it)
             probabilities.push_back(it->second.fit / population_fitness);
-        
+
         // accumulate probabilities
         for (size_t i = 1; i < population_size; ++i)
             probabilities[i] += probabilities[i - 1];
@@ -75,20 +76,35 @@ public:
         Population new_population;
         new_population.reserve(new_population_size);
 
-        for (size_t i = 0; i < new_population_size; ++i) {
-            size_t winner_idx = 0;
-            switch (m_selection_strategy) {
-                case ROULETTE_WHEEL_SELECTION:
-                    winner_idx = roulette_wheel_selection(population_hashmap.begin(), population_hashmap.end());
-                    break;
-                default:
-                    throw std::runtime_error("unknown selection strategy");
+        std::set<size_t> unique_winners;
+        while (unique_winners.size() < new_population_size) {
+            std::vector<size_t> new_population_idxs(new_population_size);
+
+            #pragma omp parallel for
+            for (size_t i = 0; i < new_population_size; ++i) {
+                size_t winner_idx = 0;
+                switch (m_selection_strategy) {
+                    case ROULETTE_WHEEL_SELECTION:
+                    {
+                        winner_idx = roulette_wheel_selection(population_hashmap.begin(), population_hashmap.end());
+                        break;
+                    }
+                    default:
+                        throw std::runtime_error("unknown selection strategy");
+                }
+                
+                new_population_idxs[i] = winner_idx;
             }
 
-            new_population.push_back(population[winner_idx]);
-            population_hashmap.erase(winner_idx);
+            unique_winners.insert(new_population_idxs.begin(), new_population_idxs.end());
+            for (const auto& winner_idx : unique_winners)
+                population_hashmap.erase(winner_idx);
         }
 
+        for (const auto& winner_idx : unique_winners)
+            new_population.push_back(population[winner_idx]);
+        
+        new_population.resize(new_population_size);
         population = std::move(new_population);
     }
 };
